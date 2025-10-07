@@ -1,0 +1,80 @@
+#ifndef LOGGER_HPP
+#define LOGGER_HPP
+
+#include <exception>
+#include <string>
+#include <iostream>
+
+namespace Utils::Error
+{
+    enum class Type
+    {
+        UNEXPECTED_AT_RESPONDSE = 1,
+        PARSER_ERROR = 2,
+        PIPE_ERROR = 3
+    };
+
+    std::ostream& operator<<(std::ostream& os, const Type& type); 
+
+    namespace
+    {
+        template <Type ET>
+        class BaseError : public std::exception
+        {
+        public:
+            explicit BaseError(std::string msg) : message_(std::move(msg)) {}
+
+            virtual log() const 
+            {
+                std::cout << getType() << message_ << std::endl;
+                std::cerr << getType() << message_ << std::endl;
+            }
+
+            const char *what() const noexcept override
+            {
+                return message_.c_str();
+            }
+
+            constexpr Type getType()
+            {
+                return ET;
+            }
+
+            BaseError(BaseError &&other) = default;
+
+            BaseError(const BaseError &other) = default;
+
+            BaseError &operator=(BaseError &&other) = delete;
+
+            BaseError &operator=(const BaseError &other) = delete;
+
+        private:
+            const std::string message_;
+        };
+    }
+
+    /**
+     * Register the handler when the app is crashed. Only call this method in the MAIN. 
+     */
+    void install_crash_hanlder();
+
+    class UnexpectedATResponse : public BaseError<Type::UNEXPECTED_AT_RESPONDSE>
+    {
+    public:
+        UnexpectedATResponse(std::string at_command, std::string expected, std::string got);
+    };
+
+    class ParserError : public BaseError<Type::PARSER_ERROR>
+    {
+    public:
+        ParserError(std::string message);
+    };
+
+    class PipeError : public BaseError<Type::PIPE_ERROR>
+    {
+    public:
+        PipeError(std::string message);
+    };
+}
+
+#endif // LOGGER_HPP

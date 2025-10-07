@@ -1,6 +1,6 @@
 set(UTILS_SOURCES
     src/cmd_pipe.cpp
-    src/logger.cpp
+    src/error.cpp
     src/serial_interface.cpp
 )
 
@@ -12,3 +12,5 @@ target_include_directories(cellular_utils
     PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
+
+target_link_options(cellular_utils PRIVATE "-rdynamic")

@@ -33,6 +33,11 @@ namespace Utils::Interface
         return oss.str();
     }
 
+    std::string Command::message() const 
+    {
+        return at_command_;
+    }
+
     void Command::verify(const std::string &respond) const
     {
         if (!expected_respond_.has_value())
@@ -55,6 +60,12 @@ namespace Utils::Interface
 
     Prompt::Prompt(std::string message) : AMessage(Type::PROMPT),
                                           message_(std::move(message)) {}
+
+                                          
+    std::string Prompt::message() const 
+    {
+        return message_;
+    }
 
     std::string Prompt::to_string() const
     {

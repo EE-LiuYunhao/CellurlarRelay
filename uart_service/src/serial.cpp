@@ -219,7 +219,7 @@ int SerialPi::available()
     if (ioctl(sd, FIONREAD, &nbytes) < 0)
     {
         fprintf(stderr, "Failed to get byte count on serial.\n");
-        exit(-1);
+        raise(SIGINT);
     }
     return nbytes;
 }
@@ -228,7 +228,7 @@ int SerialPi::available()
  * Returns: first byte of incoming serial data available */
 char SerialPi::receive()
 {
-    read(sd, &c, 1);
+    last_read_cnt = read(sd, &c, 1);
     return c;
 }
 
@@ -346,13 +346,7 @@ void SerialPi::end()
 
 /********** FUNCTIONS OUTSIDE CLASSES **********/
 
-// Sleep the specified milliseconds
-void delay(long millis)
-{
-    usleep(millis * 1000);
-}
-
-void delayMicroseconds(long micros)
+void SerialPi::delayMicroseconds(long micros)
 {
     if (micros > 100){
         struct timespec tim, tim2;
@@ -377,7 +371,7 @@ void delayMicroseconds(long micros)
 }
 
 // Configures the specified pin to behave either as an input or an output
-void pinMode(int pin, Pinmode mode)
+void SerialPi::pinMode(int pin, Pinmode mode)
 {
     if (mode == OUTPUT)
     {
@@ -499,7 +493,7 @@ void pinMode(int pin, Pinmode mode)
 }
 
 // Write a HIGH or a LOW value to a digital pin
-void digitalWrite(int pin, int value)
+void SerialPi::digitalWrite(int pin, int value)
 {
     if (value == HIGH)
     {
@@ -607,17 +601,3 @@ void digitalWrite(int pin, int value)
     delayMicroseconds(1);
     // Delay to allow any change in state to be reflected in the LEVn, register bit.
 }
-
-long millis()
-{
-    long elapsedTime;
-    // stop timer
-    gettimeofday(&end_point, NULL);
-
-    // compute and print the elapsed time in millisec
-    elapsedTime = (end_point.tv_sec - start_program.tv_sec) * 1000.0;    // sec to ms
-    elapsedTime += (end_point.tv_usec - start_program.tv_usec) / 1000.0; // us to ms
-    return elapsedTime;
-}
-
-SerialPi Serial = SerialPi();

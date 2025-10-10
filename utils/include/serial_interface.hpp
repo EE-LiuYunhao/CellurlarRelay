@@ -21,8 +21,11 @@ namespace Utils::Interface
     
         friend std::ostream& operator<<(std::ostream& os, const std::shared_ptr<AMessage>& cmd);
 
+        virtual std::string message() const = 0;
+
     protected:
         virtual std::string to_string() const = 0;
+
 
     private:
         Type type_;
@@ -43,6 +46,8 @@ namespace Utils::Interface
         Command& operator=(Command&&) = delete;
 
         void verify(const std::string& respond) const;
+
+        std::string message() const override;
 
     protected:
         std::string to_string() const override;
@@ -65,6 +70,8 @@ namespace Utils::Interface
         Prompt& operator=(const Prompt&) = delete;
 
         Prompt& operator=(Prompt&&) = delete;
+
+        std::string message() const override;
 
     protected:
         std::string to_string() const override;

@@ -56,7 +56,7 @@ namespace Utils::Error
     /**
      * Register the handler when the app is crashed. Only call this method in the MAIN. 
      */
-    void install_crash_hanlder();
+    void crash_printer(int sig);
 
     class UnexpectedATResponse : public BaseError<Type::UNEXPECTED_AT_RESPONDSE>
     {

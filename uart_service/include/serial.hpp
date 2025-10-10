@@ -237,11 +237,6 @@ static int REV = 0;
 #define SPI_CLOCK_DIV2 2         ///< 2 = 6.25ns = 160MHz
 #define SPI_CLOCK_DIV1 1         ///< 0 = 256us = 4kHz
 
-namespace unistd
-{
-    // All functions of unistd.h must be called like this: unistd::the_function()
-}
-
 enum Representation
 {
     BIN,
@@ -314,14 +309,13 @@ public:
     void flush();
     void setTimeout(long millis);
     void end();
+
+    int last_read_cnt;
+
+    
+    static void pinMode(int pin, Pinmode mode);
+    static void digitalWrite(int pin, int value);
+    static void delayMicroseconds(long micros);
 };
-
-void pinMode(int pin, Pinmode mode);
-void digitalWrite(int pin, int value);
-void delay(long millis);
-void delayMicroseconds(long micros);
-long millis();
-
-extern SerialPi Serial;
 
 #endif // SERIAL_HPP

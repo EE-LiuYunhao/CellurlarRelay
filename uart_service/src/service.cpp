@@ -1,4 +1,5 @@
 #include "serial.hpp"
+#include "sms.hpp"
 #include "cmd_pipe.hpp"
 #include "error.hpp"
 
@@ -61,8 +62,7 @@ public:
     {
         std::ostringstream incoming;
         char last = 0;
-        send_command_get_respond("AT+CMGF=1", 1000ms);
-        send_command_get_respond("AT+CSCS=\"UCS2\"", 1000ms);
+        send_command_get_respond("AT+CMGF=0", 1000ms); // PDU mode
         send_command_get_respond("AT+CNMI=2,1", 1000ms);
         while (!m_stop)
         {
@@ -81,10 +81,13 @@ public:
                     if (const auto sm_cnt = content.find("\"SM\","); sm_cnt != content.npos)
                     {
                         std::ostringstream query_formatter;
+                        std::ostringstream delete_formatter;
                         query_formatter << "AT+CMGR=" << content.substr(sm_cnt);
-                        auto content = send_command_get_respond(query_formatter.str().c_str(), 2000ms);
+                        query_formatter << "AT+CMGD=" << content.substr(sm_cnt);
+                        auto content = send_command_get_respond(query_formatter.str(), 2000ms);
                         if (content)
                             sms_handler(*content);
+                        send_command_get_respond(delete_formatter.str(), 1000ms);
                     }
                 }
                 else if (const auto ata = content.find("ATA"); ata != content.npos)
@@ -104,14 +107,14 @@ public:
                             std::cout << "Command from front-end: " << latestCommand->message() << " gets expected result " << content << std::endl;
                             m_pipe.send(std::make_shared<Utils::Interface::Prompt>(content));
                         }
-                        catch (std::exception error)
+                        catch (const std::exception &error)
                         {
-                            std::cout << error.what() << std::endl;
+                            std::cerr << error.what() << std::endl;
                         }
                     }
                     else
                     {
-                        std::cout << "Unparsable content from serial port: " << content;
+                        std::cerr << "Unparsable content from serial port: " << content;
                     }
                 }
             }
@@ -174,7 +177,7 @@ protected:
             std::cout << "Sent " << command << ", got " << oss.str() << std::endl;
             return oss.str();
         }
-        std::cout << "Sent " << command << ", timeout" << std::endl;
+        std::cerr << "Sent " << command << ", timeout" << std::endl;
         return std::nullopt;
     }
 
@@ -183,7 +186,7 @@ protected:
         const auto command = std::dynamic_pointer_cast<Utils::Interface::Command>(incoming_request);
         if (command == nullptr)
         {
-            std::cout << "daemon thread receive non-command message, ignore" << std::endl;
+            std::cerr << "daemon thread receive non-command message, ignore" << std::endl;
             return;
         }
         m_serial.println(command->message().c_str());
@@ -191,9 +194,38 @@ protected:
         m_incoming_commands.emplace(std::move(command));
     }
 
+    static inline void trim(std::string &s)
+    {
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+                                        [](unsigned char ch)
+                                        { return !std::isspace(ch); }));
+        s.erase(std::find_if(s.rbegin(), s.rend(),
+                             [](unsigned char ch)
+                             { return !std::isspace(ch); })
+                    .base(),
+                s.end());
+    }
+
     void sms_handler(std::string raw_msg)
     {
-        //todo: parse the message, send to email
+        size_t pos = raw_msg.find("\n");
+        if (pos == std::string::npos)
+        {
+            std::cerr << "cannot handel the received SMS raw string: " << raw_msg << "; only one line is presented. No PDU line" << std::endl;
+        }
+
+        // Everything after that line is the PDU
+        auto pdu = raw_msg.substr(pos + 1);
+        trim(pdu);
+        try
+        {
+            SMS message(pdu);
+            message.sendEmail();
+        }
+        catch (const std::exception &exp)
+        {
+            std::cerr << exp.what() << std::endl;
+        }
     }
 
 private:

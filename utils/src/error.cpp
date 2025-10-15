@@ -29,6 +29,9 @@ namespace Utils::Error
 
     ParserError::ParserError(std::string message) : BaseError(std::move(message)) {}
 
+    SMSParseError::SMSParseError(const std::string &raw_pdu, const std::string &parse_detail) : BaseError(
+                                                                                                    "fail to parse {" + raw_pdu + "} because " + parse_detail) {}
+
     PipeError::PipeError(std::string message) : BaseError(std::move(message)) {}
 
     UnexpectedATResponse::UnexpectedATResponse(std::string at_command, std::string expected, std::string got) : BaseError(at_command + " >>> expecting " + expected + "; got " + got) {}

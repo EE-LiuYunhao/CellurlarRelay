@@ -1,5 +1,5 @@
 set(UART_SERVICE_SOURCES
-    src/email.cpp
+    src/sms.cpp
     src/serial.cpp
     src/service.cpp
 )

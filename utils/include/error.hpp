@@ -11,10 +11,11 @@ namespace Utils::Error
     {
         UNEXPECTED_AT_RESPONDSE = 1,
         PARSER_ERROR = 2,
-        PIPE_ERROR = 3
+        PIPE_ERROR = 3,
+        SMS_PDU_ERROR = 4
     };
 
-    std::ostream& operator<<(std::ostream& os, const Type& type); 
+    std::ostream &operator<<(std::ostream &os, const Type &type);
 
     namespace
     {
@@ -24,15 +25,11 @@ namespace Utils::Error
         public:
             explicit BaseError(std::string msg) : message_(std::move(msg)) {}
 
-            virtual log() const 
-            {
-                std::cout << getType() << message_ << std::endl;
-                std::cerr << getType() << message_ << std::endl;
-            }
-
             const char *what() const noexcept override
             {
-                return message_.c_str();
+                std::ostringstream oss;
+                oss << getType() << ": " << message_;
+                return oss.str().c_str();
             }
 
             constexpr Type getType()
@@ -54,7 +51,7 @@ namespace Utils::Error
     }
 
     /**
-     * Register the handler when the app is crashed. Only call this method in the MAIN. 
+     * Register the handler when the app is crashed. Only call this method in the MAIN.
      */
     void crash_printer(int sig);
 
@@ -62,6 +59,12 @@ namespace Utils::Error
     {
     public:
         UnexpectedATResponse(std::string at_command, std::string expected, std::string got);
+    };
+
+    class SMSParseError : public BaseError<Type::SMS_PDU_ERROR>
+    {
+    public:
+        SMSParseError(const std::string &raw_pdu, const std::string &parse_detail);
     };
 
     class ParserError : public BaseError<Type::PARSER_ERROR>

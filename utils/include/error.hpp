@@ -4,6 +4,8 @@
 #include <exception>
 #include <string>
 #include <iostream>
+#include <optional>
+#include <curl/curl.h>
 
 namespace Utils::Error
 {
@@ -12,7 +14,8 @@ namespace Utils::Error
         UNEXPECTED_AT_RESPONDSE = 1,
         PARSER_ERROR = 2,
         PIPE_ERROR = 3,
-        SMS_PDU_ERROR = 4
+        SMS_PDU_ERROR = 4,
+        EMAIL_ERROR = 5
     };
 
     std::ostream &operator<<(std::ostream &os, const Type &type);
@@ -77,6 +80,12 @@ namespace Utils::Error
     {
     public:
         PipeError(std::string message);
+    };
+
+    class EmailError : public BaseError<Type::EMAIL_ERROR>
+    {
+    public:
+        EmailError(std::optional<CURLcode> curlErrorCode, std::string description);
     };
 }
 

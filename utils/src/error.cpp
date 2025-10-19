@@ -15,13 +15,16 @@ namespace Utils::Error
         switch (type)
         {
         case Type::UNEXPECTED_AT_RESPONDSE:
-            os << "UNEXPECTED_AT_RESPONDSE";
+            os << "UNEXPECTED AT RESPONDSE";
             break;
         case Type::PARSER_ERROR:
-            os << "PARSER_ERROR";
+            os << "PARSER ERROR";
             break;
         case Type::PIPE_ERROR:
-            os << "PIPE_ERROR";
+            os << "PIPE ERROR";
+            break;
+        case Type::EMAIL_ERROR:
+            os << "EMAIL ERROR";
             break;
         }
         os << ")]";
@@ -35,6 +38,15 @@ namespace Utils::Error
     PipeError::PipeError(std::string message) : BaseError(std::move(message)) {}
 
     UnexpectedATResponse::UnexpectedATResponse(std::string at_command, std::string expected, std::string got) : BaseError(at_command + " >>> expecting " + expected + "; got " + got) {}
+
+    namespace
+    {
+        const std::string EmailError_FailAtInit = "failed at init: ";
+        const std::string EmailError_FailAtCall = "failed at Internel call (error code = ";
+    }
+
+    EmailError::EmailError(std::optional<CURLcode> curlErrorCode, std::string description) :
+        BaseError("CURL fail " + (curlErrorCode ? (EmailError_FailAtCall + curl_easy_strerror(*curlErrorCode) + ")") : EmailError_FailAtInit) + description) {}
 
     void crash_printer(int sig)
     {

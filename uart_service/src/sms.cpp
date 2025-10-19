@@ -1,6 +1,8 @@
 
+#include <curl/curl.h>
 #include "sms.hpp"
 #include "error.hpp"
+#include <cstring>
 
 namespace
 {
@@ -90,6 +92,88 @@ namespace
         }
         return ts;
     }
+
+    constexpr auto SENDER = "Home<peng_liu_home@currently.com>";
+    constexpr auto RECEIVER = "Chuwei Peng<chwpeng@gmail.com>";
+
+    constexpr auto SENDER_EMAIL_ADDRESS = "peng_liu_home@currently.com";
+    constexpr auto SENDER_EMAIL_ADDRESS_BRACKET = "<peng_liu_home@currently.com>";
+    constexpr auto SENDER_EMAIL_PASSWORD = "7nsaGdfvdNGK!FM";
+    constexpr auto SENDER_EMAIL_SERVER = "smtps://smtp.mail.att.net:465";
+
+    constexpr auto RECEIVER_EMAIL_BRACKET = "<chwpeng@gmail.com>";
+
+    static size_t payload_reader(void *ptr, size_t size, size_t nmemb, void *userp)
+    {
+        const char **payload_text = (const char **)userp;
+        if ((size == 0) || (nmemb == 0) || (*payload_text == NULL))
+            return 0;
+
+        size_t len = strlen(*payload_text);
+        memcpy(ptr, *payload_text, len);
+        *payload_text += len; // advance pointer
+        return len;
+    }
+}
+
+void SMS::sendEmail() const
+{
+    auto curl_client = curl_easy_init();
+    if (curl_client == nullptr)
+    {
+        throw Utils::Error::EmailError(std::nullopt, " curl_easy_init gaves nullptr");
+    }
+
+    std::ostringstream email_formatter;
+    email_formatter << "Date: " << "\r\n";
+    email_formatter << "To: " << RECEIVER << "\r\n"
+                    << "From: " << SENDER << "\r\n"
+                    << "Subject: Recerived SMS from " << sender << "\r\n\r\n";
+
+    auto lastChar = '\0';
+    for (const auto &eachChar : content)
+    {
+        if (eachChar == '\n' && lastChar != '\r')
+        {
+            email_formatter << '\r' << eachChar;
+        }
+        else
+        {
+            email_formatter << eachChar;
+        }
+        lastChar = eachChar;
+    }
+    email_formatter << "\r\n";
+
+    struct curl_slist *recipients = nullptr;
+
+    // SMTP server (SSL on port 465)
+    curl_easy_setopt(curl_client, CURLOPT_URL, SENDER_EMAIL_SERVER);
+
+    // Authentication
+    curl_easy_setopt(curl_client, CURLOPT_USERNAME, SENDER_EMAIL_ADDRESS);
+    curl_easy_setopt(curl_client, CURLOPT_PASSWORD, SENDER_EMAIL_PASSWORD);
+
+    // Sender and recipient
+    curl_easy_setopt(curl_client, CURLOPT_MAIL_FROM, SENDER_EMAIL_ADDRESS_BRACKET);
+    recipients = curl_slist_append(recipients, RECEIVER_EMAIL_BRACKET);
+    curl_easy_setopt(curl_client, CURLOPT_MAIL_RCPT, recipients);
+
+    // Message body
+    curl_easy_setopt(curl_client, CURLOPT_READFUNCTION, payload_reader);
+    curl_easy_setopt(curl_client, CURLOPT_READDATA, email_formatter.str().c_str());
+    curl_easy_setopt(curl_client, CURLOPT_UPLOAD, 1L);
+
+    // Perform the send
+    auto res = curl_easy_perform(curl_client);
+    curl_easy_cleanup(curl_client);
+
+    if (res != CURLE_OK)
+    {
+        throw Utils::Error::EmailError(res, "failed to send " + email_formatter.str());
+    }
+
+
 }
 
 SMS::SMS(const std::string &pdu)

@@ -11,7 +11,7 @@ namespace Utils::Interface
         if (cmd == nullptr)
         {
             os << 0;
-            return;
+            return os;
         }
 
         os << static_cast<unsigned int>(cmd->type_);
@@ -108,7 +108,7 @@ namespace Utils::Interface
             }
             std::cout << "Parse input stream to AT COMMAND: {" << content0 << "} WITH NO expected respond"
                       << std::endl;
-            return std::make_shared<Command>(content0);
+            return std::make_shared<Command>(content0, std::nullopt);
         }
         case Type::PROMPT:
         {

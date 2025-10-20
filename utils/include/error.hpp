@@ -4,6 +4,7 @@
 #include <exception>
 #include <string>
 #include <iostream>
+#include <sstream>
 #include <optional>
 #include <curl/curl.h>
 
@@ -35,7 +36,7 @@ namespace Utils::Error
                 return oss.str().c_str();
             }
 
-            constexpr Type getType()
+            constexpr Type getType() const
             {
                 return ET;
             }

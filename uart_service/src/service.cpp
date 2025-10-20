@@ -18,6 +18,8 @@
 
 using namespace std::literals::chrono_literals;
 
+constexpr int POWERKEY = 6;
+
 class Service
 {
 public:
@@ -258,7 +260,7 @@ int main()
     std::signal(SIGILL, Utils::Error::crash_printer);
     std::signal(SIGBUS, Utils::Error::crash_printer);
 
-    ptr = std::make_unique<Service>();
+    ptr = std::make_unique<Service>(POWERKEY);
     ptr->begin_daemon_thread();
     ptr->loop();
     return 0;

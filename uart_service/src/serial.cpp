@@ -55,50 +55,60 @@ timeval start_program, end_point;
  * Public methods *
  ******************/
 
-static int getBoardRev(){
-	
-	FILE *cpu_info;
-	char line [120];
-	char *c,finalChar;
-	static int rev = 0;
-	
-	if (REV != 0) return REV;
-	
-	if ((cpu_info = fopen("/proc/cpuinfo","r"))==NULL){
-		fprintf(stderr,"Unable to open /proc/cpuinfo. Cannot determine board reivision.\n");
-		exit(1);
-	}
-	
-	while (fgets (line,120,cpu_info) != NULL){
-		if(strncmp(line,"Revision",8) == 0) break;
-	}
-	
-	fclose(cpu_info);
-	
-	if (line == NULL){
-		fprintf (stderr, "Unable to determine board revision from /proc/cpuinfo.\n") ;
-		exit(1);
-	}
-	
-	for (c = line ; *c ; ++c)
-    if (isdigit (*c))
-      break ;
+static int getBoardRev()
+{
 
-	if (!isdigit (*c)){
-		fprintf (stderr, "Unable to determine board revision from /proc/cpuinfo\n") ;
-		fprintf (stderr, "  (Info not found in: %s\n", line) ;
-		exit(1);
-	}
-	
-	finalChar = c [strlen (c) - 2] ;
-	
-	if ((finalChar == '2') || (finalChar == '3')){
-		bsc0 = bsc_rev1;
-		return 1;
-	}else{
-		bsc0 = bsc_rev2;
-		return 2;
-	}
+    FILE *cpu_info;
+    char line[120];
+    char *c, finalChar;
+    static int rev = 0;
+
+    if (REV != 0)
+        return REV;
+
+    if ((cpu_info = fopen("/proc/cpuinfo", "r")) == NULL)
+    {
+        fprintf(stderr, "Unable to open /proc/cpuinfo. Cannot determine board reivision.\n");
+        exit(1);
+    }
+
+    while (fgets(line, 120, cpu_info) != NULL)
+    {
+        if (strncmp(line, "Revision", 8) == 0)
+            break;
+    }
+
+    fclose(cpu_info);
+
+    if (line == NULL)
+    {
+        fprintf(stderr, "Unable to determine board revision from /proc/cpuinfo.\n");
+        exit(1);
+    }
+
+    for (c = line; *c; ++c)
+        if (isdigit(*c))
+            break;
+
+    if (!isdigit(*c))
+    {
+        fprintf(stderr, "Unable to determine board revision from /proc/cpuinfo\n");
+        fprintf(stderr, "  (Info not found in: %s\n", line);
+        exit(1);
+    }
+
+    finalChar = c[strlen(c) - 2];
+
+    if ((finalChar == '2') || (finalChar == '3'))
+    {
+        bsc0 = bsc_rev1;
+        return 1;
+    }
+    else
+    {
+        bsc0 = bsc_rev2;
+        return 2;
+    }
 }
 
 // Constructor
@@ -200,6 +210,14 @@ void SerialPi::begin(int serialSpeed)
     ioctl(sd, TIOCMSET, &status);
 
     usleep(10000);
+}
+
+void SerialPi::println(const char *message)
+{
+    const char *newline = "\r\n";
+    char *msg = NULL;
+    asprintf(&msg, "%s%s", message, newline);
+    write(sd, msg, strlen(msg));
 }
 
 /* Writes binary data to the serial port. This data is sent as a byte
@@ -348,25 +366,29 @@ void SerialPi::end()
 
 void SerialPi::delayMicroseconds(long micros)
 {
-    if (micros > 100){
+    if (micros > 100)
+    {
         struct timespec tim, tim2;
         tim.tv_sec = 0;
         tim.tv_nsec = micros * 1000;
-        
-        if(nanosleep(&tim , &tim2) < 0 )   {
-            fprintf(stderr,"Nano sleep system call failed \n");
+
+        if (nanosleep(&tim, &tim2) < 0)
+        {
+            fprintf(stderr, "Nano sleep system call failed \n");
             exit(1);
         }
-    }else{
-        struct timeval tNow, tLong, tEnd ;
-        
-        gettimeofday (&tNow, NULL) ;
-        tLong.tv_sec  = micros / 1000000 ;
-        tLong.tv_usec = micros % 1000000 ;
-        timeradd (&tNow, &tLong, &tEnd) ;
-        
-        while (timercmp (&tNow, &tEnd, <))
-            gettimeofday (&tNow, NULL) ;
+    }
+    else
+    {
+        struct timeval tNow, tLong, tEnd;
+
+        gettimeofday(&tNow, NULL);
+        tLong.tv_sec = micros / 1000000;
+        tLong.tv_usec = micros % 1000000;
+        timeradd(&tNow, &tLong, &tEnd);
+
+        while (timercmp(&tNow, &tEnd, <))
+            gettimeofday(&tNow, NULL);
     }
 }
 

@@ -50,10 +50,12 @@ public:
         send_command_get_respond("AT+CREG?", 500ms);
         // query carrier
         send_command_get_respond("AT+COPS?", 1500ms);
-        // query signal
-        send_command_get_respond("AT+CSQ", 1500ms);
 		// force disable internet
         send_command_get_respond("AT+CGATT=0", 1500ms);
+		// enable the phone call number
+        send_command_get_respond("AT+CLIP=1", 1500ms);
+        // query signal
+        send_command_get_respond("AT+CSQ", 1500ms);
     }
 
     ~Service()
@@ -121,10 +123,19 @@ public:
 						std::cout << " -> Unparsable number" << std::endl;
 					}
                 }
-                // else if (const auto ata = content.find("ATA"); ata != content.npos)
-                //{
-                //    m_pipe.send(std::make_shared<Utils::Interface::Prompt>("Incoming phone call"));
-                //}
+				else if (const auto ring = content.find("RING"); ring != content.npos)
+                {
+					if (const auto phone = content.find("CLIP:"); phone != content.npos)
+					{
+						const auto phone_num = content.substr(phone, content.find(",", phone));
+						std::cout << "New incoming phone call from " << phone_num << std::endl;
+					}
+					else
+					{
+						std::cout << "New incoming phone call from unknown caller (NO CLIP entry"
+							      << ", raw content: {" << content << "})" << std::endl;
+					}
+                }
                 else
                 {
                     std::unique_lock lock(m_cmd_queue_mtx);

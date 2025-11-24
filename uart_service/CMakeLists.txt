@@ -1,5 +1,5 @@
 set(UART_SERVICE_SOURCES
-    src/email.cpp
+    src/sms.cpp
     src/serial.cpp
     src/service.cpp
 )
@@ -21,4 +21,8 @@ endif()
 target_link_libraries(cellular_uart_service
     PRIVATE
     cellular_utils
+)
+
+install(TARGETS cellular_uart_service
+	RUNTIME DESTINATION bin
 )

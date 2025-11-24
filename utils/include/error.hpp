@@ -21,40 +21,40 @@ namespace Utils::Error
 
     std::ostream &operator<<(std::ostream &os, const Type &type);
 
-	template <Type ET>
-	class BaseError : public std::exception
-	{
-	public:
-		explicit BaseError(std::string msg) : message_(std::move(msg))
-		{
-			std::ostringstream oss;
-			oss << getType() << ": " << message_;
-			error_what = oss.str();
-		}
+    template <Type ET>
+    class BaseError : public std::exception
+    {
+    public:
+        explicit BaseError(std::string msg) : message_(std::move(msg))
+        {
+            std::ostringstream oss;
+            oss << getType() << ": " << message_;
+            error_what = oss.str();
+        }
 
-		const char *what() const noexcept override
-		{
-			return error_what.c_str();
-		}
+        const char *what() const noexcept override
+        {
+            return error_what.c_str();
+        }
 
-		constexpr Type getType() const
-		{
-			return ET;
-		}
+        constexpr Type getType() const
+        {
+            return ET;
+        }
 
-		BaseError(BaseError &&other) = default;
+        BaseError(BaseError &&other) = default;
 
-		BaseError(const BaseError &other) = default;
+        BaseError(const BaseError &other) = default;
 
-		BaseError &operator=(BaseError &&other) = delete;
+        BaseError &operator=(BaseError &&other) = delete;
 
-		BaseError &operator=(const BaseError &other) = delete;
+        BaseError &operator=(const BaseError &other) = delete;
 
-	private:
-		const std::string message_;
+    private:
+        const std::string message_;
 
-		std::string error_what;
-	};
+        std::string error_what;
+    };
     /**
      * Register the handler when the app is crashed. Only call this method in the MAIN.
      */

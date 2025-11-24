@@ -40,14 +40,14 @@ namespace Utils
         // Send a string into the pipe.
         void send(const std::shared_ptr<Interface::AMessage>& message);
 
-		void close();
+        void close();
 
     private:
         Role role_ = Role::SERVICE;
         unsigned int write_idx = 0;
         unsigned int listen_idx = 1;
 
-		std::ifstream ifs;
+        std::ifstream ifs;
     };
 }
 

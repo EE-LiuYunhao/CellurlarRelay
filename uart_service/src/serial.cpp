@@ -116,7 +116,7 @@ SerialPi::SerialPi()
 {
     REV = getBoardRev();
     serialPort = "/dev/ttyS0";
-    //	serialPort = "/dev/ttyAMA0";
+    //    serialPort = "/dev/ttyAMA0";
     timeOut = 1000;
 }
 
@@ -246,27 +246,27 @@ int SerialPi::available()
  * Returns: first byte of incoming serial data available */
 char SerialPi::receive(int timeoutInMs)
 {
-	struct pollfd pfd;
+    struct pollfd pfd;
     pfd.fd = sd;
     pfd.events = POLLIN;
-	int ret = poll(&pfd, 1, timeoutInMs);
+    int ret = poll(&pfd, 1, timeoutInMs);
     if (ret == -1)
-	{
+    {
         return 0;
-	}
-	else if (ret == 0)
-	{
-		return 26; // ^Z --> timeout
+    }
+    else if (ret == 0)
+    {
+        return 26; // ^Z --> timeout
     }
 
-	if (pfd.revents & POLLIN)
-	{
-		unsigned char c;
-		ssize_t n = read(sd, &c, 1);
-		if (n == 0) return 4; // EOT
-		return c;
+    if (pfd.revents & POLLIN)
+    {
+        unsigned char c;
+        ssize_t n = read(sd, &c, 1);
+        if (n == 0) return 4; // EOT
+        return c;
     }
-	return 4; // EOT
+    return 4; // EOT
 }
 
 /* returns the first valid (long) integer value from the current position.

@@ -94,27 +94,27 @@ namespace
         return ts;
     }
 
-	struct EmailPayloadCarrier
-	{
-		const std::string& data; // pointer to the email body
-		size_t pos;              // current position in the string
-	};
+    struct EmailPayloadCarrier
+    {
+        const std::string& data; // pointer to the email body
+        size_t pos;              // current position in the string
+    };
 
     static size_t payload_reader(void *ptr, size_t size, size_t nmemb, void *userp)
     {
-		auto* payload = static_cast<EmailPayloadCarrier *>(userp);
-		size_t buffer_size = size * nmemb;
+        auto* payload = static_cast<EmailPayloadCarrier *>(userp);
+        size_t buffer_size = size * nmemb;
 
-		if (payload->pos > payload->data.size())
-			return 0; // no more data to send
+        if (payload->pos > payload->data.size())
+            return 0; // no more data to send
 
-		auto copy_len = payload->data.size() + 1 - payload->pos;
-		copy_len = copy_len <= buffer_size ? copy_len : buffer_size;
+        auto copy_len = payload->data.size() + 1 - payload->pos;
+        copy_len = copy_len <= buffer_size ? copy_len : buffer_size;
 
-		memcpy(ptr, payload->data.data() + payload->pos, copy_len);
-		payload->pos += copy_len;
+        memcpy(ptr, payload->data.data() + payload->pos, copy_len);
+        payload->pos += copy_len;
 
-		return copy_len;
+        return copy_len;
     }
 }
 
@@ -125,18 +125,18 @@ std::unique_ptr<Utils::Options::Email> SMS::email_config = nullptr;
 void SMS::send_email() const
 {
 
-	std::call_once(config_init, [this](){ email_config = std::make_unique<Utils::Options::Email>(); });
+    std::call_once(config_init, [this](){ email_config = std::make_unique<Utils::Options::Email>(); });
 
-	if (is_segment)
-	{
-		if (auto segmentIdx = ref_to_segments.find(reference);
-			segmentIdx == ref_to_segments.end() || std::get<1>(segmentIdx->second).size() != std::get<0>(segmentIdx->second))
-		{
-			std::cout << "Sending segmented SMS with ref = " << reference
-					  << " but the segments is missing or not completed" << std::endl;
-			return;
-		}
-	}
+    if (is_segment)
+    {
+        if (auto segmentIdx = ref_to_segments.find(reference);
+            segmentIdx == ref_to_segments.end() || std::get<1>(segmentIdx->second).size() != std::get<0>(segmentIdx->second))
+        {
+            std::cout << "Sending segmented SMS with ref = " << reference
+                      << " but the segments is missing or not completed" << std::endl;
+            return;
+        }
+    }
     auto curl_client = curl_easy_init();
     if (curl_client == nullptr)
     {
@@ -144,36 +144,36 @@ void SMS::send_email() const
     }
 
     auto last_char = '\0';
-	std::string full_content;
-	std::ostringstream sms_concat;
-	if (is_segment)
-	{
-		auto node = ref_to_segments.extract(reference);
-		if (!node.empty())
-		{
-			auto& all_seg = std::get<1>(node.mapped());
-			for (const auto each_seg : all_seg) sms_concat << each_seg;
-			full_content = sms_concat.str();
-		}
-	}
+    std::string full_content;
+    std::ostringstream sms_concat;
+    if (is_segment)
+    {
+        auto node = ref_to_segments.extract(reference);
+        if (!node.empty())
+        {
+            auto& all_seg = std::get<1>(node.mapped());
+            for (const auto each_seg : all_seg) sms_concat << each_seg;
+            full_content = sms_concat.str();
+        }
+    }
 
-	auto content_selector = [this, &full_content]()
-	{
-		if (is_segment) return full_content;
-		return content;
-	};
+    auto content_selector = [this, &full_content]()
+    {
+        if (is_segment) return full_content;
+        return content;
+    };
 
-	if (email_config == nullptr || !email_config->is_valid())
-	{
-		std::cout << "Email config is not valid: cannot send email, log only.\nComplete SMS is : "
-				  << content_selector() << std::endl;
-		curl_easy_cleanup(curl_client);
-		return;
-	}
+    if (email_config == nullptr || !email_config->is_valid())
+    {
+        std::cout << "Email config is not valid: cannot send email, log only.\nComplete SMS is : "
+                  << content_selector() << std::endl;
+        curl_easy_cleanup(curl_client);
+        return;
+    }
 
     std::ostringstream email_formatter;
 
-	auto now = std::chrono::system_clock::now();
+    auto now = std::chrono::system_clock::now();
     auto current_time = std::chrono::system_clock::to_time_t(now);
 
 
@@ -181,9 +181,9 @@ void SMS::send_email() const
     email_formatter << "To: " << email_config->get_receiver() << "\r\n"
                     << "From: " << email_config->get_sender() << "\r\n"
                     << "Subject: Received SMS from " << sender
-					<< "\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n";
+                    << "\r\nMIME-Version: 1.0\r\nContent-Type: text/plain; charset=UTF-8\r\nContent-Transfer-Encoding: 8bit\r\n\r\n";
 
-	
+    
     for (const auto &each_char : content_selector())
     {
         if (each_char == '\n' && last_char != '\r')
@@ -198,14 +198,14 @@ void SMS::send_email() const
     }
     email_formatter << "\r\n";
 
-	EmailPayloadCarrier email_body { email_formatter.str(), 0 };
-	std::cout << "Email: " << email_body.data << std::endl;
+    EmailPayloadCarrier email_body { email_formatter.str(), 0 };
+    std::cout << "Email: " << email_body.data << std::endl;
 
     struct curl_slist *recipients = nullptr;
 
     // SMTP server (SSL on port 465)
     curl_easy_setopt(curl_client, CURLOPT_URL, email_config->get_server().c_str());
-	curl_easy_setopt(curl_client, CURLOPT_CAINFO, "/etc/ssl/certs/ca-certificates.crt");
+    curl_easy_setopt(curl_client, CURLOPT_CAINFO, "/etc/ssl/certs/ca-certificates.crt");
 
     // Authentication
     curl_easy_setopt(curl_client, CURLOPT_USERNAME, email_config->get_sender_email().c_str());
@@ -223,10 +223,10 @@ void SMS::send_email() const
     curl_easy_setopt(curl_client, CURLOPT_READDATA, &email_body);
 
     // Perform the send
-	// curl_easy_setopt(curl_client, CURLOPT_VERBOSE, 1L);
+    // curl_easy_setopt(curl_client, CURLOPT_VERBOSE, 1L);
     auto res = curl_easy_perform(curl_client);
     curl_easy_cleanup(curl_client);
-	curl_slist_free_all(recipients);
+    curl_slist_free_all(recipients);
 
     if (res != CURLE_OK)
     {
@@ -236,32 +236,32 @@ void SMS::send_email() const
     
 std::ostream& operator<<(std::ostream& os, const SMS& message)
 {
-	os << "SMS:\n{\n\tsmsc: {" << message.smsc
-	   << "},\n\tsender: {" << message.sender
-	   << "},\n\ttimestamp: {" << message.timestamp
-	   << "},\n\tsegment: {";
-	if (message.is_segment)
-	{
-		os << "\n\t\treference: " << message.reference;
-		if (auto segmentIdx = SMS::ref_to_segments.find(message.reference); segmentIdx != SMS::ref_to_segments.end())
-		{
-			os << "\n\t\tcount: " << std::get<1>(segmentIdx->second).size()
-			   << ",\n\t\treceived: " << std::get<0>(segmentIdx->second)
-			   << ",\n\t\tall: [";
-			for (const auto each: std::get<1>(segmentIdx->second))
-			{
-				os << "\n\t\t\t{" << each << "},";
-			}
-			os << "\n\t\t]";
-		}
-	}
-	os << "},\n\tcontent: {" << message.content
-	   << "}\n}";
-	return os;
+    os << "SMS:\n{\n\tsmsc: {" << message.smsc
+       << "},\n\tsender: {" << message.sender
+       << "},\n\ttimestamp: {" << message.timestamp
+       << "},\n\tsegment: {";
+    if (message.is_segment)
+    {
+        os << "\n\t\treference: " << message.reference;
+        if (auto segmentIdx = SMS::ref_to_segments.find(message.reference); segmentIdx != SMS::ref_to_segments.end())
+        {
+            os << "\n\t\tcount: " << std::get<1>(segmentIdx->second).size()
+               << ",\n\t\treceived: " << std::get<0>(segmentIdx->second)
+               << ",\n\t\tall: [";
+            for (const auto each: std::get<1>(segmentIdx->second))
+            {
+                os << "\n\t\t\t{" << each << "},";
+            }
+            os << "\n\t\t]";
+        }
+    }
+    os << "},\n\tcontent: {" << message.content
+       << "}\n}";
+    return os;
 }
 
 SMS::SMS(std::string sender_, std::string content_): 
-	sender(std::move(sender_)), content(std::move(content_)) {} 
+    sender(std::move(sender_)), content(std::move(content_)) {} 
 
 SMS::SMS(const std::string &pdu)
 {
@@ -277,8 +277,8 @@ SMS::SMS(const std::string &pdu)
     idx += 2 + smscLen * 2;
 
     // First octet of SMS-DELIVER
-	const auto firstOctet = std::stoi(pdu.substr(idx, 2), nullptr, 16);
-	bool udhi = (firstOctet & 0x40) != 0; // indicate UDH exsits
+    const auto firstOctet = std::stoi(pdu.substr(idx, 2), nullptr, 16);
+    bool udhi = (firstOctet & 0x40) != 0; // indicate UDH exsits
     idx += 2;
 
     // Sender number length
@@ -310,77 +310,77 @@ SMS::SMS(const std::string &pdu)
 
     // User data
     std::vector<unsigned char> ud = hexToBytes(pdu.substr(idx));
-	unsigned int skip = 0;
-	int count = 0; // total segment count
-	int index = 0; // index of the current segment
+    unsigned int skip = 0;
+    int count = 0; // total segment count
+    int index = 0; // index of the current segment
 
-	if (udhi)
-	{
-		skip = static_cast<unsigned int>(ud[0]) + 1;
-		if (ud[0] == 0) throw Utils::Error::SMSParseError(pdu, "The SMS's first octet indicates it has UDH, but its UDH length is 0");
-		if (ud.size() < ud[0] + 1)
-		{
-			std::ostringstream errorReason;
-			errorReason << "The SMS's first octet indicates it has UDH, but UDH's length ("
-						<< static_cast<unsigned int>(ud[0]) << ") + 1 exceeds UD size (" << ud.size() << ")";
-			throw Utils::Error::SMSParseError(pdu, errorReason.str());
-		}
-		switch (ud[1])
-		{
-		case 0x00:
-		case 0x08:
-			// 8-bit reference or 16-bit reference for SMS segment
-			if (ud[0] < 2)
-			{
-				//throw: no IEDL
-				std::ostringstream errorReason;
-				errorReason << "The SMS's UDH indicates it is an SMS segment, but there is no IEDL in its UDH because its UDHL = "
-							<< static_cast<unsigned int>(ud[0]);
-				throw Utils::Error::SMSParseError(pdu, errorReason.str());
-			}
-			else if (ud[0] != 2 + ud[2])
-			{
-				//else: UD[0] --- UDH length != IEI + IEDL + length of IED
-				std::ostringstream errorReason;
-				errorReason << "The SMS's UDH indicates it is an SMS segment, but the IEDL in its UDH does not match its UDHL = "
-							<< static_cast<unsigned int>(ud[0]) << ", whereas IEDL = "
-							<< static_cast<unsigned int>(ud[2]) << ", but UDH must be 2 + IDEL for this case";
-				throw Utils::Error::SMSParseError(pdu, errorReason.str());
-			}
-			else if (ud[2] == 3)
-			{
-				// IEDL = 3: 1 reference, 1 count, 1 index
-				reference = ud[3];
-				count = static_cast<unsigned int>(ud[4]);
-				index = static_cast<unsigned int>(ud[5]) - 1;
+    if (udhi)
+    {
+        skip = static_cast<unsigned int>(ud[0]) + 1;
+        if (ud[0] == 0) throw Utils::Error::SMSParseError(pdu, "The SMS's first octet indicates it has UDH, but its UDH length is 0");
+        if (ud.size() < ud[0] + 1)
+        {
+            std::ostringstream errorReason;
+            errorReason << "The SMS's first octet indicates it has UDH, but UDH's length ("
+                        << static_cast<unsigned int>(ud[0]) << ") + 1 exceeds UD size (" << ud.size() << ")";
+            throw Utils::Error::SMSParseError(pdu, errorReason.str());
+        }
+        switch (ud[1])
+        {
+        case 0x00:
+        case 0x08:
+            // 8-bit reference or 16-bit reference for SMS segment
+            if (ud[0] < 2)
+            {
+                //throw: no IEDL
+                std::ostringstream errorReason;
+                errorReason << "The SMS's UDH indicates it is an SMS segment, but there is no IEDL in its UDH because its UDHL = "
+                            << static_cast<unsigned int>(ud[0]);
+                throw Utils::Error::SMSParseError(pdu, errorReason.str());
+            }
+            else if (ud[0] != 2 + ud[2])
+            {
+                //else: UD[0] --- UDH length != IEI + IEDL + length of IED
+                std::ostringstream errorReason;
+                errorReason << "The SMS's UDH indicates it is an SMS segment, but the IEDL in its UDH does not match its UDHL = "
+                            << static_cast<unsigned int>(ud[0]) << ", whereas IEDL = "
+                            << static_cast<unsigned int>(ud[2]) << ", but UDH must be 2 + IDEL for this case";
+                throw Utils::Error::SMSParseError(pdu, errorReason.str());
+            }
+            else if (ud[2] == 3)
+            {
+                // IEDL = 3: 1 reference, 1 count, 1 index
+                reference = ud[3];
+                count = static_cast<unsigned int>(ud[4]);
+                index = static_cast<unsigned int>(ud[5]) - 1;
 
-			}
-			else if (ud[2] == 4)
-			{
-				// IEDL = ud[2]
-				reference = ud[3] << 8 | ud[4];
-				count = static_cast<unsigned int>(ud[5]);
-				index = static_cast<unsigned int>(ud[6]) - 1;
-			}
-			else
-			{
-				//throw: unexpected IEDL 
-				std::ostringstream errorReason;
-				errorReason << "The SMS's UDH indicates it is an SMS segment, but the IEDL in its UDH is unexpected: "
-							<< static_cast<unsigned int>(ud[2]);
-				throw Utils::Error::SMSParseError(pdu, errorReason.str());
-			}
-			is_segment = true;
-			break;
-		default:
-		{
-			std::ostringstream errorReason;
-			errorReason << "The SMS's first octect indicates it has UDH, but the IEI in UDH is "
-				        << std::hex << ud[1] << ": not recognizable";
-			throw Utils::Error::SMSParseError(pdu, errorReason.str());
-		}
-		}
-	}
+            }
+            else if (ud[2] == 4)
+            {
+                // IEDL = ud[2]
+                reference = ud[3] << 8 | ud[4];
+                count = static_cast<unsigned int>(ud[5]);
+                index = static_cast<unsigned int>(ud[6]) - 1;
+            }
+            else
+            {
+                //throw: unexpected IEDL 
+                std::ostringstream errorReason;
+                errorReason << "The SMS's UDH indicates it is an SMS segment, but the IEDL in its UDH is unexpected: "
+                            << static_cast<unsigned int>(ud[2]);
+                throw Utils::Error::SMSParseError(pdu, errorReason.str());
+            }
+            is_segment = true;
+            break;
+        default:
+        {
+            std::ostringstream errorReason;
+            errorReason << "The SMS's first octect indicates it has UDH, but the IEI in UDH is "
+                        << std::hex << ud[1] << ": not recognizable";
+            throw Utils::Error::SMSParseError(pdu, errorReason.str());
+        }
+        }
+    }
 
 
     switch (dcs & 0x0C)
@@ -399,38 +399,38 @@ SMS::SMS(const std::string &pdu)
     }
     }
 
-	if (is_segment && reference != 0)
-	{
-		if (auto segments = ref_to_segments.find(reference); segments != ref_to_segments.end())
-		{
-			auto& all_contents = std::get<1>(segments->second);
-			if (all_contents.size() <= index)
-			{
-				std::ostringstream errorReason;
-				errorReason << "Got a SMS segment; the reference exists, but it expects "
-							<< all_contents.size() << " segments, whereas the current segment index is "
-							<< index;
-				throw Utils::Error::SMSParseError(pdu, errorReason.str());
-			}
-			if (all_contents.size() != count)
-			{
-				std::ostringstream errorReason;
-				errorReason << "Got a SMS segment; the reference exists, but it expects "
-							<< all_contents.size() << " segments, whereas this segment says it is the No. "
-							<< index << "segment of " << count << " in total";
-				throw Utils::Error::SMSParseError(pdu, errorReason.str());
-			}
-			if (all_contents[index].empty()) ++std::get<0>(segments->second);
-			all_contents[index] = content;
-		}
-		else
-		{
-			std::vector<std::string> all_contents;
-			all_contents.resize(count);
-			all_contents[index] = content;
-			ref_to_segments.emplace(reference, std::make_tuple((unsigned short)1, all_contents));
-		}
-	}
+    if (is_segment && reference != 0)
+    {
+        if (auto segments = ref_to_segments.find(reference); segments != ref_to_segments.end())
+        {
+            auto& all_contents = std::get<1>(segments->second);
+            if (all_contents.size() <= index)
+            {
+                std::ostringstream errorReason;
+                errorReason << "Got a SMS segment; the reference exists, but it expects "
+                            << all_contents.size() << " segments, whereas the current segment index is "
+                            << index;
+                throw Utils::Error::SMSParseError(pdu, errorReason.str());
+            }
+            if (all_contents.size() != count)
+            {
+                std::ostringstream errorReason;
+                errorReason << "Got a SMS segment; the reference exists, but it expects "
+                            << all_contents.size() << " segments, whereas this segment says it is the No. "
+                            << index << "segment of " << count << " in total";
+                throw Utils::Error::SMSParseError(pdu, errorReason.str());
+            }
+            if (all_contents[index].empty()) ++std::get<0>(segments->second);
+            all_contents[index] = content;
+        }
+        else
+        {
+            std::vector<std::string> all_contents;
+            all_contents.resize(count);
+            all_contents[index] = content;
+            ref_to_segments.emplace(reference, std::make_tuple((unsigned short)1, all_contents));
+        }
+    }
 
 }
 

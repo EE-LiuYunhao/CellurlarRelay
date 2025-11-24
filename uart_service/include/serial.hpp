@@ -76,7 +76,7 @@
 #define BCM2835_BSC_C_ST 0x00000080      ///< Start transfer, 1 = Start a new transfer
 #define BCM2835_BSC_C_CLEAR_1 0x00000020 ///< Clear FIFO Clear
 #define BCM2835_BSC_C_CLEAR_2 0x00000010 ///< Clear FIFO Clear
-#define BCM2835_BSC_C_READ 0x00000001    ///<	Read transfer
+#define BCM2835_BSC_C_READ 0x00000001    ///<    Read transfer
 
 // Register masks for BSC_S
 #define BCM2835_BSC_S_CLKT 0x00000200 ///< Clock stretch timeout

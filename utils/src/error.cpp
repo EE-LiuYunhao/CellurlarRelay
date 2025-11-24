@@ -23,7 +23,7 @@ namespace Utils::Error
         case Type::PIPE_ERROR:
             os << "PIPE ERROR";
             break;
-		case Type::SMS_PDU_ERROR: 
+        case Type::SMS_PDU_ERROR: 
             os << "SMS PDU PARSING ERROR";
             break;
         case Type::EMAIL_ERROR:
@@ -31,7 +31,7 @@ namespace Utils::Error
             break;
         }
         os << ")]";
-		return os;
+        return os;
     }
 
     ParserError::ParserError(std::string message) : BaseError(std::move(message)) {}

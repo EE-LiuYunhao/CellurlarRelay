@@ -18,7 +18,7 @@ class SMS
 public:
     explicit SMS(const std::string &pdu);
 
-	SMS(std::string sender, std::string content); // for plain-text debug
+    SMS(std::string sender, std::string content); // for plain-text debug
 
     SMS() = default;
     SMS(const SMS &other) = default;
@@ -30,7 +30,7 @@ public:
 
     void send_email() const;
 
-	typedef std::tuple<unsigned short, std::vector<std::string>> SegmentCountAndContents;
+    typedef std::tuple<unsigned short, std::vector<std::string>> SegmentCountAndContents;
 
 
 private:
@@ -38,15 +38,15 @@ private:
     std::string sender;
     std::string timestamp;
     std::string content;
-	bool is_segment;
-	unsigned short reference = 0;
+    bool is_segment;
+    unsigned short reference = 0;
 
-	// for long SMS lookup
-	static std::unordered_map<unsigned short, SegmentCountAndContents> ref_to_segments; 
+    // for long SMS lookup
+    static std::unordered_map<unsigned short, SegmentCountAndContents> ref_to_segments; 
 
-	static std::once_flag config_init;
-	
-	static std::unique_ptr<Utils::Options::Email> email_config;
+    static std::once_flag config_init;
+    
+    static std::unique_ptr<Utils::Options::Email> email_config;
 };
 
 #endif

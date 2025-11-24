@@ -28,31 +28,31 @@ public:
         m_serial.begin(115200);
         std::cout << "starting serial at /dev/ttyS0" << std::endl;
         // SerialPi::pinMode(powerkey, OUTPUT);
-		// std::cout << "\tPin mode set" << std::endl;
+        // std::cout << "\tPin mode set" << std::endl;
         // SerialPi::digitalWrite(powerkey, HIGH);
-		// std::cout << "\tDigital write set to HIGH" << std::endl;
+        // std::cout << "\tDigital write set to HIGH" << std::endl;
         // std::this_thread::sleep_for(600ms);
         // SerialPi::digitalWrite(powerkey, LOW);
-		// std::cout << "\tDigital write set to LOW" << std::endl;
+        // std::cout << "\tDigital write set to LOW" << std::endl;
         for (std::optional<std::string> hi = std::nullopt; !hi; hi = send_command_get_respond("AT", 2000ms))
         {
         }
 
         std::this_thread::sleep_for(500ms);
 
-		for (std::optional<std::string> ready_or_not = std::nullopt; 
-			 ready_or_not == std::nullopt || ready_or_not->find("CPIN: READY") == std::string::npos;
-			 ready_or_not = send_command_get_respond("AT+CPIN?", 500ms))
-		{
-			std::this_thread::sleep_for(500ms);
-		}
-		// query signal connection
+        for (std::optional<std::string> ready_or_not = std::nullopt; 
+             ready_or_not == std::nullopt || ready_or_not->find("CPIN: READY") == std::string::npos;
+             ready_or_not = send_command_get_respond("AT+CPIN?", 500ms))
+        {
+            std::this_thread::sleep_for(500ms);
+        }
+        // query signal connection
         send_command_get_respond("AT+CREG?", 500ms);
         // query carrier
         send_command_get_respond("AT+COPS?", 1500ms);
-		// force disable internet
+        // force disable internet
         send_command_get_respond("AT+CGATT=0", 1500ms);
-		// enable the phone call number
+        // enable the phone call number
         send_command_get_respond("AT+CLIP=1", 1500ms);
         // query signal
         send_command_get_respond("AT+CSQ", 1500ms);
@@ -61,7 +61,7 @@ public:
     ~Service()
     {
         m_serial.end();
-		m_pipe.close();
+        m_pipe.close();
     }
 
     Service(const Service &) = delete;
@@ -81,60 +81,60 @@ public:
         while (true)
         {
             auto first = m_serial.receive();
-			if (first == 0 || first == 4)
-			{
-				std::cout << "serial port is closed or gets EOF (the other end is off-line)" << std::endl;
-				break;
-			}
+            if (first == 0 || first == 4)
+            {
+                std::cout << "serial port is closed or gets EOF (the other end is off-line)" << std::endl;
+                break;
+            }
             if (first == '\n' && last == '\r')
             {
                 auto content = incoming.str();
-				incoming.str("");
+                incoming.str("");
                 incoming.clear();
-				if (content.empty())
-				{
-					last = 0;
-					continue; // empty -> skip
-				}
+                if (content.empty())
+                {
+                    last = 0;
+                    continue; // empty -> skip
+                }
                 if (const auto cmti = content.find("+CMTI:"); cmti != content.npos)
                 {
-					std::cout << "New SMS: " << content; 
+                    std::cout << "New SMS: " << content; 
                     if (const auto sm_cnt = content.find("\"SM\","); sm_cnt != content.npos)
                     {
                         std::ostringstream query_formatter;
                         std::ostringstream delete_formatter;
-						const auto smsNo = content.substr(sm_cnt + 5);
+                        const auto smsNo = content.substr(sm_cnt + 5);
                         query_formatter << "AT+CMGR=" << smsNo;
                         delete_formatter << "AT+CMGD=" << smsNo;
-						std::cout << " -> No. " << smsNo << std::endl;
+                        std::cout << " -> No. " << smsNo << std::endl;
                         auto smsContent = send_command_get_respond(query_formatter.str(), 2000ms);
                         send_command_get_respond(delete_formatter.str(), 1000ms);
-						if (smsContent)
-						{
+                        if (smsContent)
+                        {
                             sms_handler(*smsContent);
-						} 
-						else
-						{
-							std::cerr << query_formatter.str() << " => no message returned" << std::endl; 
-						}
+                        } 
+                        else
+                        {
+                            std::cerr << query_formatter.str() << " => no message returned" << std::endl; 
+                        }
                     }
-					else 
-					{
-						std::cout << " -> Unparsable number" << std::endl;
-					}
+                    else 
+                    {
+                        std::cout << " -> Unparsable number" << std::endl;
+                    }
                 }
-				else if (const auto ring = content.find("RING"); ring != content.npos)
+                else if (const auto ring = content.find("RING"); ring != content.npos)
                 {
-					if (const auto phone = content.find("CLIP:"); phone != content.npos)
-					{
-						const auto phone_num = content.substr(phone, content.find(",", phone));
-						std::cout << "New incoming phone call from " << phone_num << std::endl;
-					}
-					else
-					{
-						std::cout << "New incoming phone call from unknown caller (NO CLIP entry"
-							      << ", raw content: {" << content << "})" << std::endl;
-					}
+                    if (const auto phone = content.find("CLIP:"); phone != content.npos)
+                    {
+                        const auto phone_num = content.substr(phone, content.find(",", phone));
+                        std::cout << "New incoming phone call from " << phone_num << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "New incoming phone call from unknown caller (NO CLIP entry"
+                                  << ", raw content: {" << content << "})" << std::endl;
+                    }
                 }
                 else
                 {
@@ -194,19 +194,19 @@ protected:
 
         std::ostringstream oss;
         bool oFound = false;
-		char c;
+        char c;
         while (m_serial.available() || std::chrono::steady_clock::now() - start <= timeout)
         {
-			int remainedTime = (timeout - (std::chrono::steady_clock::now() - start)).count();
+            int remainedTime = (timeout - (std::chrono::steady_clock::now() - start)).count();
 
             c = m_serial.receive(remainedTime >= 0 ? remainedTime : 0);
-			if (c == 26 || c == 0 || c == 4)
-			{
-				// 26 --- ^Z timeout
-				// 0 --- error
-				// 4 --- EOF
-				break;
-			}
+            if (c == 26 || c == 0 || c == 4)
+            {
+                // 26 --- ^Z timeout
+                // 0 --- error
+                // 4 --- EOF
+                break;
+            }
             if (!oFound && c == 'O')
             {
                 oFound = true;
@@ -214,10 +214,10 @@ protected:
             else if (oFound)
             {
                 if (c == 'K')
-				{
-					std::cout << "Sent " << command << ", got " << oss.str() << std::endl;
-					return oss.str();
-				}
+                {
+                    std::cout << "Sent " << command << ", got " << oss.str() << std::endl;
+                    return oss.str();
+                }
                 oFound = false;
                 oss << 'O' << c;
             }
@@ -226,10 +226,10 @@ protected:
                 oss << c;
             }
         }
-		if (c == 0) std::cerr << "Sent " << command << ", error" << std::endl;
-		else if (c == 4) std::cout << "Sent " << command << ", but the serial port is closed" << std::endl;
-		else std::cerr << "Sent " << command << ", timeout" << std::endl;
-		return std::nullopt;
+        if (c == 0) std::cerr << "Sent " << command << ", error" << std::endl;
+        else if (c == 4) std::cout << "Sent " << command << ", but the serial port is closed" << std::endl;
+        else std::cerr << "Sent " << command << ", timeout" << std::endl;
+        return std::nullopt;
     }
 
     void frontend_request_handler(std::shared_ptr<Utils::Interface::AMessage> incoming_request)
@@ -260,11 +260,11 @@ protected:
     void sms_handler(std::string raw_msg)
     {
         size_t pos = raw_msg.find("\n");
-		pos = raw_msg.find("\n", pos + 1);
+        pos = raw_msg.find("\n", pos + 1);
         if (pos == std::string::npos)
         {
             std::cerr << "cannot handle the received SMS raw string: " << raw_msg
-					  << "; only one line is presented. No PDU line" << std::endl;
+                      << "; only one line is presented. No PDU line" << std::endl;
         }
 
         // Everything after that line is the PDU
@@ -273,7 +273,7 @@ protected:
         try
         {
             SMS message(pdu);
-			std::cout << "Parsed to " << message << std::endl;
+            std::cout << "Parsed to " << message << std::endl;
             message.send_email();
         }
         catch (const std::exception &exp)
@@ -298,11 +298,11 @@ static std::unique_ptr<Service> ptr = nullptr;
 
 void sig_int_handler(int sig)
 {
-	std::cout << "Killed by ";
-	if (sig == SIGINT) std::cout << " Ctrl-C ";
-	if (sig == SIGTERM) std::cout << " KILL ";
-	std::cout << std::endl;
-	
+    std::cout << "Killed by ";
+    if (sig == SIGINT) std::cout << " Ctrl-C ";
+    if (sig == SIGTERM) std::cout << " KILL ";
+    std::cout << std::endl;
+    
     ptr = nullptr;
 }
 

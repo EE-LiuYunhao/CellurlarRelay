@@ -16,15 +16,15 @@ CommandPipe::CommandPipe(Role role): role_(role)
     {
         if (stat(PIPE_PATH[idx], &st) != 0)
         {
-			std::cout << "FIFO pipe " << PIPE_PATH[idx] << " is not created yet. mkfifo it first" << std::endl;
+            std::cout << "FIFO pipe " << PIPE_PATH[idx] << " is not created yet. mkfifo it first" << std::endl;
             if (mkfifo(PIPE_PATH[idx], 0666) == -1)
             {
                 throw std::runtime_error("Failed to create named pipe");
             }
         } else 
-		{
-			std::cout << "FIFO pipe" << PIPE_PATH[idx] << " is already created. Reuse it" << std::endl;
-		}
+        {
+            std::cout << "FIFO pipe" << PIPE_PATH[idx] << " is already created. Reuse it" << std::endl;
+        }
     }
     switch (role)
     {
@@ -49,29 +49,29 @@ CommandPipe::CommandPipe(Role role): role_(role)
 
 void CommandPipe::close()
 {
-	if (ifs.is_open())
-	{
-		ifs.close();
-	}
+    if (ifs.is_open())
+    {
+        ifs.close();
+    }
 }
 
 void CommandPipe::listen(std::function<void(std::shared_ptr<Interface::AMessage>)> callback)
 {
     if (!ifs.is_open())
     {
-		ifs.basic_ios<char>::rdbuf()->pubsetbuf(nullptr, 0); // unbuffered
-		ifs.open(CommandPipe::PIPE_PATH[listen_idx]);
-		if (!ifs.is_open())
-		{
-			throw Error::PipeError(std::string("fail to open ") + PIPE_PATH[listen_idx] + " as an std::ifstream");
-		}
+        ifs.basic_ios<char>::rdbuf()->pubsetbuf(nullptr, 0); // unbuffered
+        ifs.open(CommandPipe::PIPE_PATH[listen_idx]);
+        if (!ifs.is_open())
+        {
+            throw Error::PipeError(std::string("fail to open ") + PIPE_PATH[listen_idx] + " as an std::ifstream");
+        }
     }
 
     while (ifs.is_open())
     {
         callback(Interface::parse(ifs));
     }
-	std::cout << "Pipe " << PIPE_PATH[listen_idx] << " is closed" << std::endl;
+    std::cout << "Pipe " << PIPE_PATH[listen_idx] << " is closed" << std::endl;
 }
 
 void CommandPipe::send(const std::shared_ptr<Interface::AMessage>& message)

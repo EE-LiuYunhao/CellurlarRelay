@@ -8,12 +8,12 @@
 
 void sig_int_handler(int sig)
 {
-	std::cout << "Killed by ";
-	if (sig == SIGINT) std::cout << " Ctrl-C ";
-	if (sig == SIGTERM) std::cout << " KILL ";
-	std::cout << std::endl;
+    std::cout << "Killed by ";
+    if (sig == SIGINT) std::cout << " Ctrl-C ";
+    if (sig == SIGTERM) std::cout << " KILL ";
+    std::cout << std::endl;
 
-	exit(0);
+    exit(0);
 }
 
 const std::string pdu1 = "07911356044902004412916801861326265746660008520113"
@@ -42,64 +42,64 @@ int main()
     std::signal(SIGILL, Utils::Error::crash_printer);
     std::signal(SIGBUS, Utils::Error::crash_printer);
 
-	// std::cout << "===========\nReady for testing segmented SMS" << std::endl;
-	// SMS message1(pdu2);
-	// std::cout << "PDU2 -> Message 1 done" << std::endl;
-	// std::cout << "===========\nFormulated dummy SMS (1) for test: " << message1 << std::endl;
-	// message1.send_email(); // this should not send anything out, but print out log message
-	// SMS message2(pdu1);
-	// std::cout << "PDU2 -> Message 1 done" << std::endl;
-	// std::cout << "===========\nFormulated dummy SMS (2) for test: " << message2 << std::endl;
-	
+    // std::cout << "===========\nReady for testing segmented SMS" << std::endl;
+    // SMS message1(pdu2);
+    // std::cout << "PDU2 -> Message 1 done" << std::endl;
+    // std::cout << "===========\nFormulated dummy SMS (1) for test: " << message1 << std::endl;
+    // message1.send_email(); // this should not send anything out, but print out log message
+    // SMS message2(pdu1);
+    // std::cout << "PDU2 -> Message 1 done" << std::endl;
+    // std::cout << "===========\nFormulated dummy SMS (2) for test: " << message2 << std::endl;
+    
 
-	// std::cout << "===========\nNow sending email";
+    // std::cout << "===========\nNow sending email";
 
-	// try
-	// {
-	// 	message1.send_email();
-	// }
-	// catch (const std::exception& e)
-	// {
-	// 	std::cerr << e.what() << std::endl;
-	// }
+    // try
+    // {
+    //     message1.send_email();
+    // }
+    // catch (const std::exception& e)
+    // {
+    //     std::cerr << e.what() << std::endl;
+    // }
 
-	// std::cout << "===========\nNow sending your cutomized email";
-	
-	auto email_config = std::make_unique<Utils::Options::Email>();
-	if (email_config == nullptr || !email_config->is_valid())
-	{
-		std::cerr << "Error! Email config has error";
-		if (email_config) std::cerr << ": invalid email config";
-		else std::cerr << ": nullptr";
-		std::cerr << std::endl;
-		return 1;
-	}
+    // std::cout << "===========\nNow sending your cutomized email";
+    
+    auto email_config = std::make_unique<Utils::Options::Email>();
+    if (email_config == nullptr || !email_config->is_valid())
+    {
+        std::cerr << "Error! Email config has error";
+        if (email_config) std::cerr << ": invalid email config";
+        else std::cerr << ": nullptr";
+        std::cerr << std::endl;
+        return 1;
+    }
 
-	std::cout << "Test: email config is\nSender: " << email_config->get_sender() << " (\n\temail = "
-		      << email_config->get_sender_email() << ",\n\temail(bracketed) = " << email_config->get_sender_bracket()
-			  << ",\n\tserver = " << email_config->get_server() << ",\n\tpassword = " << email_config->get_password()
-			  << "\n)\nReceiver: " << email_config->get_receiver() << "(\n\temail(bracketed) = "
-			  << email_config->get_receiver_bracket() << "\n)" << std::endl;
-	
-	std::string sender_number;
-	std::string content;
-	std::cout << "Enter the phone number: ";
-	std::getline(std::cin, sender_number);
-	std::cout << "\nContent to " << sender_number << ": ";
-	std::getline(std::cin, content);
+    std::cout << "Test: email config is\nSender: " << email_config->get_sender() << " (\n\temail = "
+              << email_config->get_sender_email() << ",\n\temail(bracketed) = " << email_config->get_sender_bracket()
+              << ",\n\tserver = " << email_config->get_server() << ",\n\tpassword = " << email_config->get_password()
+              << "\n)\nReceiver: " << email_config->get_receiver() << "(\n\temail(bracketed) = "
+              << email_config->get_receiver_bracket() << "\n)" << std::endl;
+    
+    std::string sender_number;
+    std::string content;
+    std::cout << "Enter the phone number: ";
+    std::getline(std::cin, sender_number);
+    std::cout << "\nContent to " << sender_number << ": ";
+    std::getline(std::cin, content);
 
-	SMS message{sender_number, content};
-	std::cout << "===========\nFormulated dummy SMS for test: " << message << std::endl;
+    SMS message{sender_number, content};
+    std::cout << "===========\nFormulated dummy SMS for test: " << message << std::endl;
 
-	try
-	{
-		message.send_email();
-	}
-	catch (const std::exception& e)
-	{
-		std::cerr << e.what() << std::endl;
-	}
+    try
+    {
+        message.send_email();
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+    }
 
-	return 0;
+    return 0;
 }
 
